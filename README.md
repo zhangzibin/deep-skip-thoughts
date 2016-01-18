@@ -1,8 +1,8 @@
 # deep-skip-thoughts
 
-This is an Torch implementation of [Skip-Thought Vectors](http://arxiv.org/abs/1506.06726). You may read the paper for more details.
+This is an Torch implementation of [Skip-Thought Vectors](http://arxiv.org/abs/1506.06726). The original implementation is [here](https://github.com/ryankiros/skip-thoughts). You may read the paper for more details.
 
-Most of the code is borrowed from [Andrej Karpathy's Char-Rnn](https://github.com/karpathy/char-rnn). And the original implementation is [here](https://github.com/ryankiros/skip-thoughts).
+Most of the code is borrowed from [Andrej Karpathy's Char-Rnn](https://github.com/karpathy/char-rnn). Thanks for Andrej.
 
 My implementation is different from Ryan Kiros's at some point such as the optimizer but the main architecture is the same. Mutil-layer is supported for better result.
 
