@@ -8,6 +8,16 @@ My implementation is different from Ryan Kiros's at some point such as the optim
 
 I'm still working on this project. There may be some problems in my code and it's result haven't be tested by now. But you can try this bleeding-edge version if you wish.
 
+## TODO
+
+More concise code.
+
+Multi-threads support for pair RNN such as prev/next.
+
+More optimizers such as rmsprop.
+
+And so on.
+
 
 ## Requirements
 
