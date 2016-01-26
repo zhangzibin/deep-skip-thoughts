@@ -1,14 +1,9 @@
 local GRU = {}
 
-local ok, cunn = pcall(require, 'fbcunn')
-if not ok then
-    LookupTable = nn.LookupTable
-else
-    LookupTable = nn.LookupTableGPU
-end
-
 function GRU.gru(dim_word, rnn_size, num_layer, dropout, vec_size, vocab_size)
     dropout = dropout or 0 
+
+    -- decoder has a context vector as input
     local has_vec = 0
     if vec_size > 0 then has_vec = 1 end
 
@@ -17,7 +12,7 @@ function GRU.gru(dim_word, rnn_size, num_layer, dropout, vec_size, vocab_size)
     if vec_size > 0 then 
         table.insert(inputs, nn.Identity()()) -- vec_size, decoder only
     end
-    table.insert(inputs, nn.Identity()()) -- x
+    table.insert(inputs, nn.Identity()()) -- embedding of prev word
     for L = 1,num_layer do
         table.insert(inputs, nn.Identity()()) -- prev_h[L]
     end
@@ -29,10 +24,6 @@ function GRU.gru(dim_word, rnn_size, num_layer, dropout, vec_size, vocab_size)
         return nn.CAddTable()({i2h, h2h})
     end
 
-    -- embedding layer
-    local word_vec_layer = LookupTable(vocab_size, dim_word)
-    word_vec_layer.name = 'word_vecs' -- change name so we can refer to it easily later
-
     -- forward through each layer
     local outputs = {}
     for L = 1,num_layer do
@@ -41,11 +32,10 @@ function GRU.gru(dim_word, rnn_size, num_layer, dropout, vec_size, vocab_size)
         -- the input to this layer
         if L == 1 then 
             if has_vec > 0 then
-                word_vec = word_vec_layer(inputs[2])
-                x = nn.JoinTable(2)({nn.Identity()(inputs[1]), word_vec})
+                x = nn.JoinTable(2)({inputs[1], inputs[2]})
                 input_size_L = vec_size + dim_word
             else
-                x = word_vec_layer(inputs[1])
+                x = inputs[1]
                 input_size_L = dim_word
             end
         else 
@@ -69,7 +59,7 @@ function GRU.gru(dim_word, rnn_size, num_layer, dropout, vec_size, vocab_size)
         table.insert(outputs, next_h)
     end
 
-    -- set up the decoder
+    -- set up the decoder classification layer
     if vec_size > 0 then
         local top_h = outputs[#outputs]
         if dropout > 0 then top_h = nn.Dropout(dropout)(top_h) end
