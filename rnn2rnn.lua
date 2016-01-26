@@ -321,7 +321,7 @@ function myfeval()
     d_encoder_forw_state[opt.seq_length][#encoder_forw_init_state] = dvec[{{}, {1,opt.encoder_forw_rnn_size}}]:clone()
     d_encoder_back_state[opt.seq_length][#encoder_back_init_state] = dvec[{{}, {opt.encoder_forw_rnn_size+1,opt.vec_size}}]:clone()
     for t=opt.seq_length,1,-1 do
-        local dlst = clones.encoder_forw[t]:backward({x[t], unpack(encoder_forw_state[t-1])}, d_encoder_forw_state[t])
+        local dlst = clones.encoder_forw[t]:backward({embed_x[t], unpack(encoder_forw_state[t-1])}, d_encoder_forw_state[t])
         d_encoder_forw_state[t-1] = {}
         for k,v in pairs(dlst) do
             -- k == 1 is gradient on embed_x
@@ -331,7 +331,7 @@ function myfeval()
         end
     end
     for t=opt.seq_length,1,-1 do
-        local dlst = clones.encoder_back[t]:backward({x[opt.seq_length-t+1], unpack(encoder_back_state[t-1])}, d_encoder_back_state[t])
+        local dlst = clones.encoder_back[t]:backward({embed_x[opt.seq_length-t+1], unpack(encoder_back_state[t-1])}, d_encoder_back_state[t])
         d_encoder_back_state[t-1] = {}
         for k,v in pairs(dlst) do
             -- k == 1 is gradient on x, skip
