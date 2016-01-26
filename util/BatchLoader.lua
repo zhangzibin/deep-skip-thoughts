@@ -10,7 +10,10 @@ function BatchLoader.create(data_dir, batch_size, seq_length, split_fractions, m
     local input_file = path.join(data_dir, 'input.txt')
     local vocab_file = path.join(data_dir, 'vocab.t7')
     local tensor_file = path.join(data_dir, 'data.t7')
-    BatchLoader.text_to_tensor(input_file, vocab_file, tensor_file, seq_length, min_freq)
+    if not (path.exists(vocab_file) or path.exists(tensor_file)) then
+        print('one-time setup: preprocessing input text file ' .. input_file .. '...')
+        BatchLoader.text_to_tensor(input_file, vocab_file, tensor_file, seq_length, min_freq)
+    end
 
     print('loading data files...')
     local data = torch.load(tensor_file)
