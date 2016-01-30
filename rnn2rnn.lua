@@ -89,6 +89,43 @@ protos.decoder_next = GRU.gru(opt.dim_word, opt.decoder_rnn_size, opt.decoder_nu
 protos.criterion_prev = nn.ClassNLLCriterion()
 protos.criterion_next = nn.ClassNLLCriterion()
 
+-- ship the model to the GPU if desired
+if opt.gpuid >= 0 then
+    for k,v in pairs(protos) do v:cuda() end
+end
+
+-- put the above things into one flattened parameters tensor
+embed_params, embed_grad_params = model_utils.combine_all_parameters(protos.embed)
+encoder_forw_params, encoder_forw_grad_params = model_utils.combine_all_parameters(protos.encoder_forw)
+encoder_back_params, encoder_back_grad_params = model_utils.combine_all_parameters(protos.encoder_back)
+decoder_prev_params, decoder_prev_grad_params = model_utils.combine_all_parameters(protos.decoder_prev)
+decoder_next_params, decoder_next_grad_params = model_utils.combine_all_parameters(protos.decoder_next)
+
+-- initialization
+if do_random_init then
+    embed_params:uniform(-0.06, 0.06) -- small uniform numbers
+    encoder_forw_params:uniform(-0.06, 0.06) -- small uniform numbers
+    encoder_back_params:uniform(-0.06, 0.06) -- small uniform numbers
+    decoder_prev_params:uniform(-0.06, 0.06) -- small uniform numbers
+    decoder_next_params:uniform(-0.06, 0.06) -- small uniform numbers
+end
+
+local tol_params_num = embed_params:nElement() + encoder_forw_params:nElement() + encoder_back_params:nElement()
+                    + decoder_prev_params:nElement() + decoder_next_params:nElement()
+print('number of parameters in the model: ' .. tol_params_num)
+
+-- make a bunch of clones after flattening, as that reallocates memory
+clones = {}
+for name,proto in pairs(protos) do
+    print('cloning ' .. name)
+    if name ~= 'embed' then 
+        clones[name] = model_utils.clone_many_times(proto, opt.seq_length, not proto.parameters)
+    else
+        -- 3 clones for embeding layers: x, y_prev, y_next
+        clones[name] = model_utils.clone_many_times(proto, 3, not proto.parameters)
+    end 
+end
+
 -- the initial state of the hidden states
 encoder_forw_init_state = {}
 encoder_back_init_state = {}
@@ -113,43 +150,6 @@ for L=1,opt.decoder_num_layers do
     end
     table.insert(decoder_prev_init_state, decoder_prev_h_init:clone())
     table.insert(decoder_next_init_state, decoder_next_h_init:clone())
-end
-
--- ship the model to the GPU if desired
-if opt.gpuid >= 0 then
-    for k,v in pairs(protos) do v:cuda() end
-end
-
--- put the above things into one flattened parameters tensor
-embed_params, embed_grad_params = model_utils.combine_all_parameters(protos.embed)
-encoder_forw_params, encoder_forw_grad_params = model_utils.combine_all_parameters(protos.encoder_forw)
-encoder_back_params, encoder_back_grad_params = model_utils.combine_all_parameters(protos.encoder_back)
-decoder_prev_params, decoder_prev_grad_params = model_utils.combine_all_parameters(protos.decoder_prev)
-decoder_next_params, decoder_next_grad_params = model_utils.combine_all_parameters(protos.decoder_next)
-
--- initialization
-if do_random_init then
-    embed_params:uniform(-0.06, 0.06) -- small uniform numbers
-    encoder_forw_params:uniform(-0.06, 0.06) -- small uniform numbers
-    encoder_back_params:uniform(-0.06, 0.06) -- small uniform numbers
-    decoder_prev_params:uniform(-0.06, 0.06) -- small uniform numbers
-    decoder_next_params:uniform(-0.06, 0.06) -- small uniform numbers
-end
-
-local tol_params_num = embed_params:nElement() + encoder_forw_params:nElement() + encoder_back_params:nElement()
-+ decoder_prev_params:nElement() + decoder_next_params:nElement()
-print('number of parameters in the model: ' .. tol_params_num)
-
--- make a bunch of clones after flattening, as that reallocates memory
-clones = {}
-for name,proto in pairs(protos) do
-    print('cloning ' .. name)
-    if name ~= 'embed' then 
-        clones[name] = model_utils.clone_many_times(proto, opt.seq_length, not proto.parameters)
-    else
-        -- 3 clones for embeding layers: x, y_prev, y_next
-        clones[name] = model_utils.clone_many_times(proto, 3, not proto.parameters)
-    end 
 end
 
 -- preprocessing helper function
