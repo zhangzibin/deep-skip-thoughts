@@ -1,8 +1,8 @@
 # deep-skip-thoughts
 
-This is an brutal Torch implementation of [Skip-Thought Vectors](http://arxiv.org/abs/1506.06726). The original implementation is [here](https://github.com/ryankiros/skip-thoughts). You may read the paper for more details.
+This is a brutal Torch implementation of [Skip-Thought Vectors](http://arxiv.org/abs/1506.06726). The original implementation is at [here](https://github.com/ryankiros/skip-thoughts). You may read the paper for more details.
 
-My implementation is different from Ryan Kiros's at some point such as the optimizer but the main architecture is the same. Mutil-layer is supported for better result.
+My implementation is different from Ryan Kiros's at some points such as the optimizer and data processing but the main architecture is similar. Mutil-layer is supported for better result.
 I'm still working on this project. There may be some problems in my code and it's result haven't be tested by now. But you can try this bleeding-edge version if you wish.
 
 By the way, the code is boring and lengthy because I define five small modules and concate them together. One embedding layer and four RNNs are trained seperately in similar manner. If the code works well, I may rewrite it in better style. lol.
@@ -12,7 +12,7 @@ Most of the code is borrowed from [Andrej Karpathy's Char-Rnn](https://github.co
 
 ## TODO
 
-Debug and test the results.
+Debug and test.
 
 Multi-threads support for pair RNN such as prev/next.
 
